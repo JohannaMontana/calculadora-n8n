@@ -353,57 +353,60 @@
 
         createBackgroundAnimation();
 
-        document.getElementById('arithmeticForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const operation = document.getElementById('operation').value;
-            const submitBtn = document.getElementById('submitBtn');
-            const loading = document.getElementById('loading');
-            const resultContainer = document.getElementById('resultContainer');
-            const resultValue = document.getElementById('resultValue');
+    document.getElementById('arithmeticForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const operation = document.getElementById('operation').value;
+    const submitBtn = document.getElementById('submitBtn');
+    const loading = document.getElementById('loading');
+    const resultContainer = document.getElementById('resultContainer');
+    const resultValue = document.getElementById('resultValue');
 
-            // Mostrar loading
-            submitBtn.disabled = true;
-            loading.style.display = 'block';
-            resultContainer.classList.remove('show');
+    // Mostrar loading
+    submitBtn.disabled = true;
+    loading.style.display = 'block';
+    resultContainer.classList.remove('show');
 
-            try {
-                
-                const webhookUrl = 'https://hannamontana.app.n8n.cloud/webhook-test/operacion-aritmetica';
-                
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                let resultado;
-                try {
-                    const operationClean = operation
-                        .replace(/×/g, '*')
-                        .replace(/÷/g, '/')
-                        .replace(/√/g, 'Math.sqrt')
-                        .replace(/\^/g, '**');
-                    
-                    resultado = eval(operationClean);
-                    if (isNaN(resultado) || !isFinite(resultado)) {
-                        resultado = "Error en operación";
-                    }
-                } catch {
-                    resultado = "Error en operación";
-                }
-                
-                // Mostrar resultado simulado
-                resultValue.textContent = resultado;
-                resultContainer.classList.add('show');
+    try {
+        // URL de tu webhook
+        const webhookUrl = 'https://hannamontana.app.n8n.cloud/webhook-test/operacion-aritmetica';
+        
+        console.log('🔍 Enviando operación:', operation);
+        console.log('🔍 URL:', webhookUrl);
 
-                console.log('Operación:', operation, 'Resultado:', resultado);
-
-            } catch (error) {
-                console.error('Error:', error);
-                resultValue.textContent = 'Error al procesar la operación';
-                resultContainer.classList.add('show');
-            } finally {
-                submitBtn.disabled = false;
-                loading.style.display = 'none';
-            }
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                operation: operation
+            })
         });
+
+        console.log(' Status:', response.status);
+        console.log(' Headers:', response.headers);
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.text();
+        console.log('Respuesta completa:', data);
+
+        // Mostrar resultado
+        resultValue.textContent = data;
+        resultContainer.classList.add('show');
+
+    } catch (error) {
+        console.error('Error completo:', error);
+        resultValue.textContent = 'Error: ' + error.message;
+        resultContainer.classList.add('show');
+    } finally {
+        submitBtn.disabled = false;
+        loading.style.display = 'none';
+    }
+});
 
         const inputField = document.getElementById('operation');
         inputField.addEventListener('focus', function() {
